@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Index - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <style>
+        .visual-progress {
+            width: 100%;
+            height: 40px;
+            background-color: #f5f5f5;
+            margin: 20px 0;
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-segment {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            background-color: var(--primary-color);
+        }
+        
+        .progress-marker {
+            position: absolute;
+            top: -20px;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+        
+        .progress-marker::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 25px;
+            background-color: #666;
+        }
+        
+        .demo-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+        }
+        
+        .frame-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .frame {
+            width: calc(33.33% - 10px);
+            aspect-ratio: 16 / 9;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .frame-time {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .frame-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        .frame-content > div {
+            margin: 5px 0;
+            width: 80%;
+            height: 10px;
+            background-color: #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .frame {
+                width: calc(50% - 10px);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .frame {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Speed Index</h1>
+        <p>Understanding how quickly content is visually displayed</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is Speed Index?</h2>
+            <p>
+                Speed Index measures how quickly content is visually displayed during page load.
+                It's calculated by analyzing video recordings of page loads and measuring how quickly
+                pixels change from blank to complete.
+            </p>
+            <p>
+                Unlike metrics that measure specific moments in time (like FCP or LCP), Speed Index
+                measures the visual progression of a page throughout the entire loading process.
+                A lower Speed Index means that content is painted more quickly and completely.
+            </p>
+            
+            <div class="performance-score">
+                <div class="score-circle good-score">Fast</div>
+                <p>0-3.4s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle average-score">Moderate</div>
+                <p>3.4-5.8s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle poor-score">Slow</div>
+                <p>Over 5.8s</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>How Speed Index is Calculated</h2>
+            <p>
+                Speed Index is calculated by:
+            </p>
+            <ol>
+                <li>Capturing a video of the page loading</li>
+                <li>Breaking the video into frames (usually at 100ms intervals)</li>
+                <li>Analyzing how complete each frame is compared to the final state</li>
+                <li>Calculating a weighted average of the visual completeness over time</li>
+            </ol>
+            <p>
+                The formula gives more weight to how quickly the page reaches visual completeness.
+                Pages that display most of their content quickly will have better (lower) Speed Index scores.
+            </p>
+            
+            <h3>Visual Progress Example</h3>
+            <div class="visual-progress">
+                <div class="progress-segment" style="left: 0%; width: 10%; background-color: rgba(0, 102, 204, 0.1);"></div>
+                <div class="progress-segment" style="left: 10%; width: 20%; background-color: rgba(0, 102, 204, 0.3);"></div>
+                <div class="progress-segment" style="left: 30%; width: 40%; background-color: rgba(0, 102, 204, 0.6);"></div>
+                <div class="progress-segment" style="left: 70%; width: 30%; background-color: rgba(0, 102, 204, 0.9);"></div>
+                
+                <div class="progress-marker" style="left: 0%;">0s</div>
+                <div class="progress-marker" style="left: 10%;">0.5s (10%)</div>
+                <div class="progress-marker" style="left: 30%;">1.0s (30%)</div>
+                <div class="progress-marker" style="left: 70%;">2.0s (70%)</div>
+                <div class="progress-marker" style="left: 100%;">3.0s (100%)</div>
+            </div>
+            
+            <p>
+                The Speed Index for this example would be calculated based on the area above the visual progress curve.
+                A page that reaches 100% visual completeness instantly would have a Speed Index of 0.
+            </p>
+        </section>
+
+        <section>
+            <h2>Speed Index Demo</h2>
+            <p>Click the buttons below to see examples of good and poor Speed Index:</p>
+            
+            <div class="button-container">
+                <button id="demo-good" class="button">Good Speed Index Example</button>
+                <button id="demo-bad" class="button">Poor Speed Index Example</button>
+            </div>
+            
+            <div class="demo-container" id="speed-index-demo-area">
+                <p>The demo will appear here...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Measuring Speed Index</h2>
+            <p>
+                Speed Index cannot be directly measured with JavaScript APIs like PerformanceObserver.
+                It requires video capture and analysis, which is typically done by lab tools like Lighthouse.
+            </p>
+            <p>
+                However, you can use other performance metrics as proxies to estimate Speed Index:
+            </p>
+            <ul>
+                <li><strong>First Contentful Paint (FCP)</strong> - Indicates when content first appears</li>
+                <li><strong>Largest Contentful Paint (LCP)</strong> - Indicates when the largest content element appears</li>
+                <li><strong>Time to Interactive (TTI)</strong> - Indicates when the page becomes fully interactive</li>
+            </ul>
+            <p>
+                If these metrics are good, Speed Index is likely to be good as well.
+            </p>
+        </section>
+
+        <section>
+            <h2>What Affects Speed Index?</h2>
+            <ul>
+                <li><strong>Server response time</strong> - How quickly the server responds to the initial request</li>
+                <li><strong>Render-blocking resources</strong> - CSS and JavaScript that delay rendering</li>
+                <li><strong>Resource load order</strong> - The sequence in which resources are loaded and rendered</li>
+                <li><strong>Progressive rendering</strong> - How gradually the page content appears</li>
+                <li><strong>Resource size</strong> - The size of CSS, JavaScript, images, and other resources</li>
+                <li><strong>Critical rendering path</strong> - The sequence of steps the browser takes to render the page</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>How to Improve Speed Index</h2>
+            <ul>
+                <li><strong>Optimize FCP and LCP</strong> - Improve how quickly content appears</li>
+                <li><strong>Minimize render-blocking resources</strong> - Defer non-critical CSS and JavaScript</li>
+                <li><strong>Optimize critical rendering path</strong> - Prioritize above-the-fold content</li>
+                <li><strong>Use progressive rendering techniques</strong> - Show content incrementally</li>
+                <li><strong>Implement code splitting</strong> - Load only what's needed for the initial view</li>
+                <li><strong>Optimize images</strong> - Use proper formats, sizes, and compression</li>
+                <li><strong>Implement resource prioritization</strong> - Use preload, prefetch, and preconnect</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Code Examples</h2>
+            
+            <h3>Good Practice: Critical CSS Inlining</h3>
+            <pre class="code-block">
+&lt;!-- Inline critical CSS in the head --&gt;
+&lt;style&gt;
+  /* Critical styles for above-the-fold content */
+  header {
+    background-color: #0066cc;
+    color: white;
+    padding: 20px;
+  }
+  
+  .hero {
+    height: 300px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .hero h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+&lt;/style&gt;
+
+&lt;!-- Defer non-critical CSS --&gt;
+&lt;link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+&lt;noscript&gt;&lt;link rel="stylesheet" href="styles.css"&gt;&lt;/noscript&gt;
+            </pre>
+            
+            <h3>Good Practice: Progressive Image Loading</h3>
+            <pre class="code-block">
+&lt;!-- Use low-quality image placeholders (LQIP) --&gt;
+&lt;style&gt;
+  .image-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .image-placeholder {
+    width: 100%;
+    filter: blur(10px);
+    transform: scale(1.1);
+    transition: opacity 0.3s ease;
+  }
+  
+  .image-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .image-full.loaded {
+    opacity: 1;
+  }
+  
+  .image-placeholder.loaded {
+    opacity: 0;
+  }
+&lt;/style&gt;
+
+&lt;div class="image-container"&gt;
+  &lt;img 
+    src="image-placeholder.jpg" 
+    class="image-placeholder" 
+    alt="Image placeholder"
+  &gt;
+  &lt;img 
+    src="image-full.jpg" 
+    class="image-full" 
+    alt="Full image" 
+    onload="this.classList.add('loaded'); this.previousElementSibling.classList.add('loaded');"
+  &gt;
+&lt;/div&gt;
+            </pre>
+            
+            <h3>Good Practice: Resource Prioritization</h3>
+            <pre class="code-block">
+&lt;!-- Preconnect to required origins --&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://api.example.com"&gt;
+
+&lt;!-- Preload critical resources --&gt;
+&lt;link rel="preload" href="critical-font.woff2" as="font" type="font/woff2" crossorigin&gt;
+&lt;link rel="preload" href="hero-image.jpg" as="image"&gt;
+
+&lt;!-- Prefetch resources needed for the next page --&gt;
+&lt;link rel="prefetch" href="next-page.html"&gt;
+&lt;link rel="prefetch" href="next-page-resources.js"&gt;
+            </pre>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Demo functionality
+        document.getElementById('demo-good').addEventListener('click', () => {
+            const demoArea = document.getElementById('speed-index-demo-area');
+            demoArea.innerHTML = '<p>Loading good Speed Index example...</p>';
+            
+            // Simulate a page with good Speed Index
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Good Speed Index Example</h3>
+                    <p>This page loads with a good Speed Index because content appears quickly and progressively:</p>
+                    
+                    <div class="frame-container">
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: #f8f9fa;">
+                                <div style="height: 20px; width: 50%; background-color: #0066cc;"></div>
+                            </div>
+                            <div class="frame-time">0.5s (20% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: #f8f9fa;">
+                                <div style="height: 20px; width: 50%; background-color: #0066cc;"></div>
+                                <div style="height: 100px; width: 80%; background-color: #ddd;"></div>
+                                <div style="height: 10px; width: 70%; background-color: #aaa;"></div>
+                            </div>
+                            <div class="frame-time">1.0s (60% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: #f8f9fa;">
+                                <div style="height: 20px; width: 50%; background-color: #0066cc;"></div>
+                                <div style="height: 100px; width: 80%; background-color: #ddd;"></div>
+                                <div style="height: 10px; width: 70%; background-color: #aaa;"></div>
+                                <div style="height: 30px; width: 90%; background-color: #ccc;"></div>
+                                <div style="height: 10px; width: 60%; background-color: #bbb;"></div>
+                            </div>
+                            <div class="frame-time">1.5s (90% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: #f8f9fa;">
+                                <div style="height: 20px; width: 50%; background-color: #0066cc;"></div>
+                                <div style="height: 100px; width: 80%; background-color: #ddd;"></div>
+                                <div style="height: 10px; width: 70%; background-color: #aaa;"></div>
+                                <div style="height: 30px; width: 90%; background-color: #ccc;"></div>
+                                <div style="height: 10px; width: 60%; background-color: #bbb;"></div>
+                                <div style="height: 20px; width: 40%; background-color: #999;"></div>
+                            </div>
+                            <div class="frame-time">2.0s (100% complete)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-progress">
+                        <div class="progress-segment" style="left: 0%; width: 20%; background-color: rgba(0, 102, 204, 0.2);"></div>
+                        <div class="progress-segment" style="left: 20%; width: 40%; background-color: rgba(0, 102, 204, 0.6);"></div>
+                        <div class="progress-segment" style="left: 60%; width: 30%; background-color: rgba(0, 102, 204, 0.9);"></div>
+                        <div class="progress-segment" style="left: 90%; width: 10%; background-color: rgba(0, 102, 204, 1);"></div>
+                    </div>
+                    
+                    <p>Key characteristics of this example:</p>
+                    <ul>
+                        <li>Content appears progressively and quickly</li>
+                        <li>Critical content (header) is visible within 0.5s</li>
+                        <li>Most of the page (90%) is visible by 1.5s</li>
+                        <li>The page is fully loaded by 2.0s</li>
+                    </ul>
+                    
+                    <div class="performance-score" style="margin-top: 20px;">
+                        <div class="score-circle good-score">Fast</div>
+                        <p>Speed Index: 1.2s</p>
+                    </div>
+                `;
+            }, 1000);
+        });
+        
+        document.getElementById('demo-bad').addEventListener('click', () => {
+            const demoArea = document.getElementById('speed-index-demo-area');
+            demoArea.innerHTML = '<p>Loading poor Speed Index example...</p>';
+            
+            // Simulate a page with poor Speed Index
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Poor Speed Index Example</h3>
+                    <p>This page loads with a poor Speed Index because content appears slowly and all at once:</p>
+                    
+                    <div class="frame-container">
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: white;">
+                                <!-- Empty frame -->
+                            </div>
+                            <div class="frame-time">1.0s (0% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: white;">
+                                <!-- Empty frame -->
+                            </div>
+                            <div class="frame-time">2.0s (0% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: white;">
+                                <!-- Empty frame -->
+                            </div>
+                            <div class="frame-time">3.0s (0% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: white;">
+                                <!-- Empty frame -->
+                            </div>
+                            <div class="frame-time">4.0s (0% complete)</div>
+                        </div>
+                        
+                        <div class="frame">
+                            <div class="frame-content" style="background-color: #f8f9fa;">
+                                <div style="height: 20px; width: 50%; background-color: #0066cc;"></div>
+                                <div style="height: 100px; width: 80%; background-color: #ddd;"></div>
+                                <div style="height: 10px; width: 70%; background-color: #aaa;"></div>
+                                <div style="height: 30px; width: 90%; background-color: #ccc;"></div>
+                                <div style="height: 10px; width: 60%; background-color: #bbb;"></div>
+                                <div style="height: 20px; width: 40%; background-color: #999;"></div>
+                            </div>
+                            <div class="frame-time">5.0s (100% complete)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-progress">
+                        <div class="progress-segment" style="left: 0%; width: 80%; background-color: rgba(0, 102, 204, 0);"></div>
+                        <div class="progress-segment" style="left: 80%; width: 20%; background-color: rgba(0, 102, 204, 1);"></div>
+                    </div>
+                    
+                    <p>Key characteristics of this example:</p>
+                    <ul>
+                        <li>No content appears for the first 4 seconds</li>
+                        <li>All content appears at once at the 5-second mark</li>
+                        <li>No progressive rendering</li>
+                        <li>Poor user experience as users see a blank page for too long</li>
+                    </ul>
+                    
+                    <div class="performance-score" style="margin-top: 20px;">
+                        <div class="score-circle poor-score">Slow</div>
+                        <p>Speed Index: 4.9s</p>
+                    </div>
+                `;
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

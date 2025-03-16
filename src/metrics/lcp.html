@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Largest Contentful Paint (LCP) - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Largest Contentful Paint (LCP)</h1>
+        <p>Understanding and optimizing the largest content element</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is Largest Contentful Paint?</h2>
+            <p>
+                Largest Contentful Paint (LCP) measures the time from when the page starts loading to when the largest
+                text block or image element is rendered within the viewport. It's a Core Web Vital and an important
+                user-centric metric for measuring perceived load speed.
+            </p>
+            
+            <div class="performance-score">
+                <div class="score-circle good-score">Good</div>
+                <p>0-2.5s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle average-score">Needs Improvement</div>
+                <p>2.5-4.0s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle poor-score">Poor</div>
+                <p>Over 4.0s</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>LCP Demo</h2>
+            <p>Click the buttons below to see how different loading strategies affect LCP:</p>
+            
+            <div class="demo-controls">
+                <button id="demo-good" class="button">Good LCP Example</button>
+                <button id="demo-bad" class="button">Poor LCP Example</button>
+            </div>
+            
+            <div class="metric-visualization" id="lcp-demo-area">
+                <p>The demo will appear here...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Measuring LCP with PerformanceObserver</h2>
+            <p>You can use the PerformanceObserver API to measure LCP in real user environments:</p>
+            
+            <pre class="code-block">
+// Create a variable to store the latest LCP value
+let lcpValue = 0;
+
+// Create a PerformanceObserver instance
+const lcpObserver = new PerformanceObserver((entryList) => {
+  const entries = entryList.getEntries();
+  const lastEntry = entries[entries.length - 1];
+  
+  // Update the LCP value
+  lcpValue = lastEntry.startTime;
+  console.log(`LCP: ${lcpValue}ms`);
+});
+
+// Register the observer for LCP entries
+lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+
+// When the page is being unloaded, report the final LCP value
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && lcpValue > 0) {
+    // Send the LCP value to your analytics
+    navigator.sendBeacon('/analytics', JSON.stringify({ lcp: lcpValue }));
+  }
+});
+            </pre>
+            
+            <div id="lcp-measurement-result">
+                <p>Your current page LCP: <span id="current-lcp">Measuring...</span></p>
+            </div>
+        </section>
+
+        <section>
+            <h2>What Elements Are Considered for LCP?</h2>
+            <p>The browser considers the following elements when determining the largest contentful paint:</p>
+            <ul>
+                <li><code>&lt;img&gt;</code> elements</li>
+                <li><code>&lt;image&gt;</code> elements inside an SVG</li>
+                <li><code>&lt;video&gt;</code> elements (using the poster image)</li>
+                <li>Elements with a background image loaded via the <code>url()</code> function</li>
+                <li>Block-level elements containing text nodes or other inline-level text elements</li>
+            </ul>
+            <p>The "largest" element is determined by the size visible within the viewport, not the total size of the element.</p>
+        </section>
+
+        <section>
+            <h2>How to Improve LCP</h2>
+            <ul>
+                <li><strong>Optimize server response times</strong> - Use a CDN, optimize your server, and implement caching</li>
+                <li><strong>Remove render-blocking resources</strong> - Defer non-critical JavaScript and CSS</li>
+                <li><strong>Optimize images</strong> - Compress images, use WebP format, and implement lazy loading for non-critical images</li>
+                <li><strong>Preload important resources</strong> - Use <code>&lt;link rel="preload"&gt;</code> for critical assets like hero images</li>
+                <li><strong>Minimize critical CSS</strong> - Inline critical CSS and defer non-critical CSS</li>
+                <li><strong>Use a service worker</strong> - Cache assets for repeat visits</li>
+                <li><strong>Text compression</strong> - Enable Gzip or Brotli compression on your server</li>
+                <li><strong>Prioritize visible content</strong> - Ensure the content above the fold loads quickly</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Code Examples</h2>
+            
+            <h3>Good Practice: Preload Critical Images</h3>
+            <pre class="code-block">
+&lt;!-- Preload the hero image that will be the LCP element --&gt;
+&lt;link rel="preload" href="hero-image.jpg" as="image"&gt;
+
+&lt;!-- Later in the HTML --&gt;
+&lt;img src="hero-image.jpg" alt="Hero image" class="hero-image"&gt;
+            </pre>
+            
+            <h3>Good Practice: Responsive Images</h3>
+            <pre class="code-block">
+&lt;!-- Use srcset to provide different image sizes --&gt;
+&lt;img 
+  srcset="hero-small.jpg 400w,
+          hero-medium.jpg 800w,
+          hero-large.jpg 1200w"
+  sizes="(max-width: 600px) 400px,
+         (max-width: 1200px) 800px,
+         1200px"
+  src="hero-medium.jpg" 
+  alt="Hero image"
+&gt;
+            </pre>
+            
+            <h3>Bad Practice: Large Unoptimized Images</h3>
+            <pre class="code-block">
+&lt;!-- Unoptimized large image that will slow down LCP --&gt;
+&lt;img src="very-large-uncompressed-image.jpg" alt="Hero image"&gt;
+            </pre>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Measure and display the current page's LCP
+        if ('PerformanceObserver' in window) {
+            let lcpValue = 0;
+            
+            const lcpObserver = new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                const lastEntry = entries[entries.length - 1];
+                
+                lcpValue = Math.round(lastEntry.startTime);
+                const lcpElement = document.getElementById('current-lcp');
+                
+                if (lcpElement) {
+                    lcpElement.textContent = `${lcpValue}ms`;
+                    
+                    // Add color coding based on performance
+                    if (lcpValue < 2500) {
+                        lcpElement.style.color = 'green';
+                    } else if (lcpValue < 4000) {
+                        lcpElement.style.color = 'orange';
+                    } else {
+                        lcpElement.style.color = 'red';
+                    }
+                }
+            });
+            
+            lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+        } else {
+            document.getElementById('current-lcp').textContent = 'Not supported in this browser';
+        }
+
+        // Demo functionality
+        document.getElementById('demo-good').addEventListener('click', () => {
+            const demoArea = document.getElementById('lcp-demo-area');
+            demoArea.innerHTML = '<p>Loading good example...</p>';
+            
+            // Simulate a good LCP by loading content quickly
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <div style="text-align: center;">
+                        <h3>Good LCP Example</h3>
+                        <div style="max-width: 500px; margin: 20px auto; border: 1px solid #ddd; padding: 10px;">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'%3E%3Crect width='500' height='300' fill='%234CAF50'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EOptimized Hero Image%3C/text%3E%3C/svg%3E" 
+                                alt="Optimized hero image" style="width: 100%;">
+                        </div>
+                        <p>This image loaded quickly because:</p>
+                        <ul style="text-align: left; display: inline-block;">
+                            <li>Image was preloaded</li>
+                            <li>Image was properly sized and compressed</li>
+                            <li>No render-blocking resources delayed it</li>
+                        </ul>
+                        <div class="performance-score">
+                            <div class="score-circle good-score">Good</div>
+                            <p>LCP: 800ms (simulated)</p>
+                        </div>
+                    </div>
+                `;
+            }, 800);
+        });
+        
+        document.getElementById('demo-bad').addEventListener('click', () => {
+            const demoArea = document.getElementById('lcp-demo-area');
+            demoArea.innerHTML = '<p>Loading poor example...</p>';
+            
+            // Simulate a poor LCP with a delay
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <div style="text-align: center;">
+                        <h3>Poor LCP Example</h3>
+                        <div style="max-width: 500px; margin: 20px auto; border: 1px solid #ddd; padding: 10px;">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'%3E%3Crect width='500' height='300' fill='%23DC3545'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EUnoptimized Hero Image%3C/text%3E%3C/svg%3E" 
+                                alt="Unoptimized hero image" style="width: 100%;">
+                        </div>
+                        <p>This image loaded slowly because:</p>
+                        <ul style="text-align: left; display: inline-block;">
+                            <li>Image was not preloaded</li>
+                            <li>Image was not properly optimized</li>
+                            <li>Render-blocking resources delayed loading</li>
+                        </ul>
+                        <div class="performance-score">
+                            <div class="score-circle poor-score">Poor</div>
+                            <p>LCP: 4500ms (simulated)</p>
+                        </div>
+                    </div>
+                `;
+            }, 4500);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Blocking Time (TBT) - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <style>
+        .blocking-visualization {
+            width: 100%;
+            height: 100px;
+            margin: 20px 0;
+            position: relative;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .task-block {
+            position: absolute;
+            height: 30px;
+            top: 35px;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .blocking-portion {
+            position: absolute;
+            height: 30px;
+            background-color: var(--danger-color);
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background-color: #333;
+        }
+        
+        .timeline-label {
+            position: absolute;
+            bottom: 5px;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .demo-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .demo-button {
+            padding: 10px 15px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .result-display {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Total Blocking Time (TBT)</h1>
+        <p>Understanding and optimizing main thread blocking</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is Total Blocking Time?</h2>
+            <p>
+                Total Blocking Time (TBT) measures the total amount of time between First Contentful Paint (FCP)
+                and Time to Interactive (TTI) where the main thread was blocked for long enough to prevent input responsiveness.
+            </p>
+            <p>
+                The main thread is considered "blocked" any time there's a Long Task (a task that runs on the main thread for more than 50 milliseconds).
+                The "blocking time" is the duration of a Long Task that exceeds 50 milliseconds. For example, if a task takes 120ms to run,
+                the blocking time would be 70ms (120ms - 50ms).
+            </p>
+            
+            <div class="performance-score">
+                <div class="score-circle good-score">Good</div>
+                <p>0-200ms</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle average-score">Needs Improvement</div>
+                <p>200-600ms</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle poor-score">Poor</div>
+                <p>Over 600ms</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>How TBT is Calculated</h2>
+            <p>
+                TBT is the sum of all "blocking time" for long tasks that occur between FCP and TTI.
+                For each task that takes longer than 50ms to execute, the time beyond 50ms is added to the TBT.
+            </p>
+            
+            <div class="blocking-visualization" id="tbt-visualization">
+                <!-- Timeline markers -->
+                <div class="timeline-marker" style="left: 0%;">
+                    <div class="timeline-label">FCP</div>
+                </div>
+                <div class="timeline-marker" style="left: 100%;">
+                    <div class="timeline-label">TTI</div>
+                </div>
+                
+                <!-- Task blocks will be added by JavaScript -->
+            </div>
+            
+            <p>
+                In the visualization above, each blue block represents a task on the main thread.
+                The red portion of each block represents the "blocking time" (the time exceeding 50ms).
+                The Total Blocking Time is the sum of all the red portions.
+            </p>
+        </section>
+
+        <section>
+            <h2>TBT Demo</h2>
+            <p>Click the buttons below to see examples of good and poor TBT:</p>
+            
+            <div class="button-container">
+                <button id="demo-good" class="button">Good TBT Example</button>
+                <button id="demo-bad" class="button">Poor TBT Example</button>
+            </div>
+            
+            <div class="demo-container" id="tbt-demo-area">
+                <p>The demo will appear here...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Measuring Long Tasks</h2>
+            <p>
+                While TBT itself can't be directly measured in the browser, you can use the Long Tasks API
+                to identify tasks that contribute to TBT:
+            </p>
+            
+            <pre class="code-block">
+// Observe long tasks
+const longTaskObserver = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  
+  for (const entry of entries) {
+    // Calculate the blocking time (anything over 50ms)
+    const blockingTime = entry.duration - 50;
+    
+    if (blockingTime > 0) {
+      console.log(`Long task detected: ${entry.duration}ms (blocking time: ${blockingTime}ms)`);
+    }
+  }
+});
+
+try {
+  // Start observing long tasks
+  longTaskObserver.observe({ type: 'longtask', buffered: true });
+} catch (e) {
+  console.log('Long Task API not supported in this browser');
+}
+            </pre>
+            
+            <div id="longtask-result">
+                <p>Long tasks detected on this page: <span id="longtask-count">0</span></p>
+                <p>Total blocking time: <span id="blocking-time">0ms</span></p>
+            </div>
+        </section>
+
+        <section>
+            <h2>What Causes High TBT?</h2>
+            <ul>
+                <li><strong>Heavy JavaScript execution</strong> - Large, complex JavaScript that takes a long time to parse, compile, and execute</li>
+                <li><strong>Long running event handlers</strong> - Event handlers that perform expensive operations</li>
+                <li><strong>Complex rendering operations</strong> - Heavy DOM manipulations that block the main thread</li>
+                <li><strong>Large, inefficient style recalculations</strong> - Layout thrashing or forced reflows</li>
+                <li><strong>Third-party scripts</strong> - Analytics, ads, and other third-party code that runs on the main thread</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>How to Improve TBT</h2>
+            <ul>
+                <li><strong>Break up Long Tasks</strong> - Split JavaScript into smaller chunks</li>
+                <li><strong>Optimize JavaScript execution</strong> - Reduce JavaScript parsing and compilation time</li>
+                <li><strong>Defer non-critical JavaScript</strong> - Load only what's needed for initial interactivity</li>
+                <li><strong>Minimize main thread work</strong> - Move work off the main thread when possible</li>
+                <li><strong>Reduce JavaScript payload size</strong> - Use code splitting and tree shaking</li>
+                <li><strong>Use web workers for complex tasks</strong> - Move non-UI work off the main thread</li>
+                <li><strong>Optimize third-party impact</strong> - Audit and limit third-party scripts</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Code Examples</h2>
+            
+            <h3>Bad Practice: Long Task on the Main Thread</h3>
+            <pre class="code-block">
+// Process a large dataset on the main thread
+function processLargeDataset(data) {
+  const results = [];
+  
+  // This could take hundreds of milliseconds or more
+  for (let i = 0; i < data.length; i++) {
+    const processedItem = complexProcessing(data[i]);
+    results.push(processedItem);
+  }
+  
+  updateUIWithResults(results);
+}
+
+// Called when a button is clicked
+button.addEventListener('click', () => {
+  const data = fetchLargeDataset();
+  processLargeDataset(data); // Blocks the main thread
+});
+            </pre>
+            
+            <h3>Good Practice: Using Web Workers</h3>
+            <pre class="code-block">
+// Create a web worker
+const worker = new Worker('data-processor.js');
+
+// Set up communication with the worker
+worker.onmessage = (event) => {
+  // Update UI with results from the worker
+  updateUIWithResults(event.data);
+};
+
+// Called when a button is clicked
+button.addEventListener('click', () => {
+  const data = fetchLargeDataset();
+  worker.postMessage(data); // Send data to worker for processing
+  
+  // The main thread remains responsive while the worker processes the data
+});
+
+// In data-processor.js (the worker):
+self.onmessage = (event) => {
+  const data = event.data;
+  const results = [];
+  
+  // Process the data (this runs in a separate thread)
+  for (let i = 0; i < data.length; i++) {
+    const processedItem = complexProcessing(data[i]);
+    results.push(processedItem);
+  }
+  
+  // Send the results back to the main thread
+  self.postMessage(results);
+};
+            </pre>
+            
+            <h3>Good Practice: Breaking Up Long Tasks</h3>
+            <pre class="code-block">
+// Process a large dataset in chunks
+function processLargeDatasetInChunks(data, chunkSize = 100) {
+  let index = 0;
+  const results = [];
+  
+  function processNextChunk() {
+    // Process a small chunk of data
+    const chunk = data.slice(index, index + chunkSize);
+    
+    for (let i = 0; i < chunk.length; i++) {
+      const processedItem = complexProcessing(chunk[i]);
+      results.push(processedItem);
+    }
+    
+    index += chunkSize;
+    
+    if (index < data.length) {
+      // Schedule the next chunk with setTimeout
+      // This allows the browser to handle user interactions between chunks
+      setTimeout(processNextChunk, 0);
+    } else {
+      // All chunks processed, update the UI
+      updateUIWithResults(results);
+    }
+  }
+  
+  // Start processing the first chunk
+  processNextChunk();
+}
+
+// Called when a button is clicked
+button.addEventListener('click', () => {
+  const data = fetchLargeDataset();
+  processLargeDatasetInChunks(data);
+});
+            </pre>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Create the TBT visualization
+        function createTBTVisualization() {
+            const visualization = document.getElementById('tbt-visualization');
+            
+            // Clear existing content
+            const existingTasks = visualization.querySelectorAll('.task-block');
+            existingTasks.forEach(task => task.remove());
+            
+            // Create task blocks
+            const tasks = [
+                { start: 10, duration: 80, label: '80ms' },
+                { start: 25, duration: 120, label: '120ms' },
+                { start: 45, duration: 40, label: '40ms' },
+                { start: 60, duration: 200, label: '200ms' },
+                { start: 85, duration: 60, label: '60ms' }
+            ];
+            
+            let totalBlockingTime = 0;
+            
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-block';
+                taskElement.style.left = `${task.start}%`;
+                taskElement.style.width = `${task.duration / 3}%`;
+                taskElement.textContent = task.label;
+                
+                // Calculate blocking time (if any)
+                const blockingTime = Math.max(0, task.duration - 50);
+                if (blockingTime > 0) {
+                    totalBlockingTime += blockingTime;
+                    
+                    const blockingElement = document.createElement('div');
+                    blockingElement.className = 'blocking-portion';
+                    blockingElement.style.left = `${50 / task.duration * 100}%`;
+                    blockingElement.style.width = `${blockingTime / task.duration * 100}%`;
+                    blockingElement.textContent = `${blockingTime}ms`;
+                    
+                    taskElement.appendChild(blockingElement);
+                }
+                
+                visualization.appendChild(taskElement);
+            });
+            
+            // Add TBT label
+            const tbtLabel = document.createElement('div');
+            tbtLabel.style.textAlign = 'center';
+            tbtLabel.style.marginTop = '10px';
+            tbtLabel.innerHTML = `<strong>Total Blocking Time: ${totalBlockingTime}ms</strong>`;
+            
+            // Replace any existing label
+            const existingLabel = document.querySelector('#tbt-visualization + p + div');
+            if (existingLabel) {
+                existingLabel.remove();
+            }
+            
+            visualization.parentNode.insertBefore(tbtLabel, visualization.nextSibling.nextSibling);
+            
+            // Fade in the task blocks
+            setTimeout(() => {
+                document.querySelectorAll('.task-block').forEach(task => {
+                    task.style.opacity = 1;
+                });
+            }, 100);
+        }
+        
+        // Initialize the visualization
+        createTBTVisualization();
+        
+        // Measure long tasks on this page
+        let longTaskCount = 0;
+        let totalBlockingTime = 0;
+        
+        if ('PerformanceObserver' in window) {
+            try {
+                const longTaskObserver = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    
+                    for (const entry of entries) {
+                        longTaskCount++;
+                        const blockingTime = Math.max(0, entry.duration - 50);
+                        totalBlockingTime += blockingTime;
+                        
+                        document.getElementById('longtask-count').textContent = longTaskCount;
+                        document.getElementById('blocking-time').textContent = `${Math.round(totalBlockingTime)}ms`;
+                    }
+                });
+                
+                longTaskObserver.observe({ type: 'longtask', buffered: true });
+            } catch (e) {
+                document.getElementById('longtask-count').textContent = 'Not supported in this browser';
+                document.getElementById('blocking-time').textContent = 'Not supported in this browser';
+            }
+        }
+        
+        // Demo functionality
+        document.getElementById('demo-good').addEventListener('click', () => {
+            const demoArea = document.getElementById('tbt-demo-area');
+            demoArea.innerHTML = '<p>Loading good TBT example...</p>';
+            
+            // Simulate a page with good TBT
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Good TBT Example</h3>
+                    <p>This page has minimal blocking time because:</p>
+                    <ul>
+                        <li>JavaScript execution is broken into small tasks</li>
+                        <li>Heavy work is done off the main thread</li>
+                        <li>Event handlers are lightweight and efficient</li>
+                    </ul>
+                    <button id="good-button" class="demo-button">Click Me</button>
+                    <div class="result-display" id="good-result">Click the button to see how responsive it is</div>
+                    
+                    <div class="performance-score" style="margin-top: 20px;">
+                        <div class="score-circle good-score">Good</div>
+                        <p>TBT: 120ms</p>
+                    </div>
+                `;
+                
+                // Add event listener that responds quickly
+                document.getElementById('good-button').addEventListener('click', () => {
+                    document.getElementById('good-result').textContent = 'Button clicked! The response was immediate because the main thread is not blocked.';
+                });
+            }, 1000);
+        });
+        
+        document.getElementById('demo-bad').addEventListener('click', () => {
+            const demoArea = document.getElementById('tbt-demo-area');
+            demoArea.innerHTML = '<p>Loading poor TBT example...</p>';
+            
+            // Simulate a page with poor TBT
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Poor TBT Example</h3>
+                    <p>This page has high blocking time because:</p>
+                    <ul>
+                        <li>JavaScript execution includes many long tasks</li>
+                        <li>Heavy work is done on the main thread</li>
+                        <li>Event handlers perform expensive operations</li>
+                    </ul>
+                    <button id="bad-button" class="demo-button">Click Me</button>
+                    <div class="result-display" id="bad-result">Click the button to see how unresponsive it is</div>
+                    
+                    <div class="performance-score" style="margin-top: 20px;">
+                        <div class="score-circle poor-score">Poor</div>
+                        <p>TBT: 850ms</p>
+                    </div>
+                `;
+                
+                // Simulate some long tasks
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const startTime = performance.now();
+                        while (performance.now() - startTime < 100) {
+                            // Intentionally empty to simulate CPU-intensive work
+                        }
+                    }, i * 500);
+                }
+                
+                // Add event listener that performs a heavy operation
+                document.getElementById('bad-button').addEventListener('click', () => {
+                    document.getElementById('bad-result').textContent = 'Processing...';
+                    
+                    // Simulate a heavy operation on click
+                    setTimeout(() => {
+                        const startTime = performance.now();
+                        while (performance.now() - startTime < 300) {
+                            // Intentionally empty to simulate CPU-intensive work
+                        }
+                        
+                        document.getElementById('bad-result').textContent = 'Button clicked! The response was delayed because the main thread was blocked by a long task.';
+                    }, 10);
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

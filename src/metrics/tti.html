@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time to Interactive (TTI) - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <style>
+        .timeline {
+            position: relative;
+            margin: 30px 0;
+            padding-left: 20px;
+            border-left: 2px solid #ddd;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -11px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+        
+        .timeline-item h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-item p {
+            margin-top: 0;
+        }
+        
+        .demo-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .interactive-button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Time to Interactive (TTI)</h1>
+        <p>Understanding when your page becomes fully interactive</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is Time to Interactive?</h2>
+            <p>
+                Time to Interactive (TTI) measures how long it takes a page to become fully interactive.
+                A page is considered fully interactive when:
+            </p>
+            <ul>
+                <li>The page displays useful content (measured by First Contentful Paint)</li>
+                <li>Event handlers are registered for most visible page elements</li>
+                <li>The page responds to user interactions within 50 milliseconds</li>
+            </ul>
+            <p>
+                TTI is an important metric because it helps identify when a page appears interactive
+                but actually isn't yet fully responsive to user input.
+            </p>
+            
+            <div class="performance-score">
+                <div class="score-circle good-score">Fast</div>
+                <p>0-3.8s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle average-score">Moderate</div>
+                <p>3.9-7.3s</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle poor-score">Slow</div>
+                <p>Over 7.3s</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>How TTI is Calculated</h2>
+            <p>
+                TTI is calculated by finding the First Contentful Paint (FCP) and then looking for a 5-second
+                window with no long tasks (tasks that take more than 50ms) and no more than two in-flight network requests.
+                TTI is the end time of the first 5-second quiet window after FCP.
+            </p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>First Contentful Paint (FCP)</h4>
+                    <p>The page starts displaying content</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h4>Long Tasks</h4>
+                    <p>JavaScript execution that blocks the main thread for more than 50ms</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h4>Network Quiet</h4>
+                    <p>No more than two in-flight network requests</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h4>CPU Quiet</h4>
+                    <p>A 5-second window with no long tasks</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h4>Time to Interactive</h4>
+                    <p>The page is now fully interactive</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>TTI Demo</h2>
+            <p>Click the buttons below to see examples of good and poor TTI:</p>
+            
+            <div class="button-container">
+                <button id="demo-good" class="button">Good TTI Example</button>
+                <button id="demo-bad" class="button">Poor TTI Example</button>
+            </div>
+            
+            <div class="demo-container" id="tti-demo-area">
+                <p>The demo will appear here...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Measuring TTI</h2>
+            <p>
+                Unlike metrics like FCP or LCP, TTI cannot be directly measured with the PerformanceObserver API.
+                It requires more complex calculations and is typically measured using lab tools like Lighthouse.
+            </p>
+            <p>
+                However, you can use the Long Tasks API to identify tasks that might be delaying TTI:
+            </p>
+            
+            <pre class="code-block">
+// Observe long tasks
+const longTaskObserver = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  
+  for (const entry of entries) {
+    console.log(`Long task detected: ${entry.duration}ms`);
+    // You can analyze these long tasks to identify what's delaying TTI
+  }
+});
+
+try {
+  // Start observing long tasks
+  longTaskObserver.observe({ type: 'longtask', buffered: true });
+} catch (e) {
+  console.log('Long Task API not supported in this browser');
+}
+            </pre>
+        </section>
+
+        <section>
+            <h2>What Causes Poor TTI?</h2>
+            <ul>
+                <li><strong>Heavy JavaScript execution</strong> - Large JS bundles that take time to parse and execute</li>
+                <li><strong>Render-blocking resources</strong> - CSS and JS that block rendering</li>
+                <li><strong>Multiple round trips to the server</strong> - Chained requests that delay full interactivity</li>
+                <li><strong>Third-party code</strong> - Analytics, ads, and other scripts that compete for CPU time</li>
+                <li><strong>Client-side rendering</strong> - JavaScript frameworks that require significant processing before interactivity</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>How to Improve TTI</h2>
+            <ul>
+                <li><strong>Minimize main thread work</strong> - Reduce JavaScript execution time</li>
+                <li><strong>Reduce JavaScript payload</strong> - Use code splitting and tree shaking</li>
+                <li><strong>Remove unused JavaScript</strong> - Eliminate dead code</li>
+                <li><strong>Defer non-critical JavaScript</strong> - Load only what's needed for initial interactivity</li>
+                <li><strong>Minimize third-party impact</strong> - Audit and limit third-party scripts</li>
+                <li><strong>Use web workers for complex tasks</strong> - Move non-UI work off the main thread</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Code Examples</h2>
+            
+            <h3>Bad Practice: Loading Everything at Once</h3>
+            <pre class="code-block">
+&lt;!-- All JavaScript loaded synchronously --&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;script src="analytics.js"&gt;&lt;/script&gt;
+&lt;script src="third-party.js"&gt;&lt;/script&gt;
+&lt;script src="non-critical-features.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  // Initialize everything immediately
+  initApp();
+  initAnalytics();
+  initThirdParty();
+  initNonCriticalFeatures();
+&lt;/script&gt;
+            </pre>
+            
+            <h3>Good Practice: Prioritizing Critical Resources</h3>
+            <pre class="code-block">
+&lt;!-- Only critical JavaScript loaded initially --&gt;
+&lt;script src="critical-app.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  // Initialize only what's needed for core functionality
+  initCriticalAppFeatures();
+  
+  // Defer non-critical initialization
+  window.addEventListener('load', () => {
+    // Use requestIdleCallback if available
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        loadNonCriticalResources();
+      });
+    } else {
+      // Fallback
+      setTimeout(loadNonCriticalResources, 1000);
+    }
+  });
+  
+  function loadNonCriticalResources() {
+    // Dynamically load non-critical scripts
+    const analyticsScript = document.createElement('script');
+    analyticsScript.src = 'analytics.js';
+    document.body.appendChild(analyticsScript);
+    
+    // Load other non-critical resources
+    import('./non-critical-features.js')
+      .then(module => {
+        module.init();
+      });
+  }
+&lt;/script&gt;
+            </pre>
+            
+            <h3>Using Intersection Observer to Lazy-Load Content</h3>
+            <pre class="code-block">
+// Lazy load images and other content when they come into view
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const lazyImage = entry.target;
+      lazyImage.src = lazyImage.dataset.src;
+      observer.unobserve(lazyImage);
+    }
+  });
+});
+
+// Observe all lazy images
+document.querySelectorAll('img.lazy').forEach(img => {
+  observer.observe(img);
+});
+            </pre>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Demo functionality
+        document.getElementById('demo-good').addEventListener('click', () => {
+            const demoArea = document.getElementById('tti-demo-area');
+            demoArea.innerHTML = '<p>Loading good TTI example...</p>';
+            
+            // Simulate a page with good TTI
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Good TTI Example</h3>
+                    <p>This page loads quickly and becomes interactive fast because:</p>
+                    <ul>
+                        <li>Only critical JavaScript is loaded initially</li>
+                        <li>Main thread is not blocked by long tasks</li>
+                        <li>Event handlers are registered early</li>
+                    </ul>
+                    <button id="interactive-button-good" class="interactive-button">Click Me</button>
+                    <div id="interactive-result-good"></div>
+                `;
+                
+                // Add event listener immediately
+                document.getElementById('interactive-button-good').addEventListener('click', () => {
+                    document.getElementById('interactive-result-good').textContent = 'Button clicked! The page was interactive quickly.';
+                });
+                
+                // Show TTI information
+                const ttiInfo = document.createElement('div');
+                ttiInfo.innerHTML = `
+                    <div class="performance-score" style="margin-top: 20px;">
+                        <div class="score-circle good-score">Fast</div>
+                        <p>TTI: 1.2s (simulated)</p>
+                    </div>
+                `;
+                demoArea.appendChild(ttiInfo);
+            }, 1000);
+        });
+        
+        document.getElementById('demo-bad').addEventListener('click', () => {
+            const demoArea = document.getElementById('tti-demo-area');
+            demoArea.innerHTML = '<p>Loading poor TTI example...</p>';
+            
+            // Simulate content loading
+            setTimeout(() => {
+                demoArea.innerHTML = `
+                    <h3>Poor TTI Example</h3>
+                    <p>This page appears to be loaded, but it's not yet interactive because:</p>
+                    <ul>
+                        <li>Heavy JavaScript is still being processed</li>
+                        <li>Main thread is blocked by long tasks</li>
+                        <li>Event handlers aren't registered yet</li>
+                    </ul>
+                    <button id="interactive-button-bad" class="interactive-button" disabled>Click Me (Not Yet Interactive)</button>
+                    <div id="interactive-result-bad">
+                        <span class="loading-indicator"></span> Still processing JavaScript...
+                    </div>
+                `;
+                
+                // Simulate main thread being blocked
+                setTimeout(() => {
+                    // Block the main thread for a while
+                    const startTime = performance.now();
+                    while (performance.now() - startTime < 200) {
+                        // Intentionally empty to simulate CPU-intensive work
+                    }
+                    
+                    // Simulate more processing
+                    setTimeout(() => {
+                        // Block the main thread again
+                        const startTime = performance.now();
+                        while (performance.now() - startTime < 300) {
+                            // Intentionally empty to simulate more CPU-intensive work
+                        }
+                        
+                        // Finally become interactive
+                        setTimeout(() => {
+                            const button = document.getElementById('interactive-button-bad');
+                            const result = document.getElementById('interactive-result-bad');
+                            
+                            if (button && result) {
+                                button.disabled = false;
+                                button.textContent = 'Click Me (Now Interactive)';
+                                result.innerHTML = 'Page is now interactive after a long delay.';
+                                
+                                // Add event listener
+                                button.addEventListener('click', () => {
+                                    result.textContent = 'Button clicked! Notice how long it took for the page to become interactive.';
+                                });
+                                
+                                // Show TTI information
+                                const ttiInfo = document.createElement('div');
+                                ttiInfo.innerHTML = `
+                                    <div class="performance-score" style="margin-top: 20px;">
+                                        <div class="score-circle poor-score">Slow</div>
+                                        <p>TTI: 8.5s (simulated)</p>
+                                    </div>
+                                `;
+                                demoArea.appendChild(ttiInfo);
+                            }
+                        }, 5000);
+                    }, 1500);
+                }, 1000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lighthouse Performance Metrics Explained</title>
+    <link rel="stylesheet" href="src/assets/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Lighthouse Performance Metrics Explained</h1>
+        <p>A practical guide to understanding and optimizing web performance</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Understanding Lighthouse Performance Metrics</h2>
+            <p>
+                Lighthouse is an open-source, automated tool for improving the quality of web pages. 
+                It provides audits for performance, accessibility, progressive web apps, SEO, and more.
+                This guide focuses on the performance metrics and how to optimize them.
+            </p>
+        </section>
+
+        <section class="metrics-list">
+            <h2>Core Web Vitals and Other Performance Metrics</h2>
+            
+            <div class="metric-card">
+                <h3>First Contentful Paint (FCP)</h3>
+                <p>Measures how long it takes for the first content to appear on screen.</p>
+                <a href="src/metrics/fcp.html" class="button">View Example</a>
+            </div>
+
+            <div class="metric-card">
+                <h3>Largest Contentful Paint (LCP)</h3>
+                <p>Measures how long it takes for the largest content element to become visible.</p>
+                <a href="src/metrics/lcp.html" class="button">View Example</a>
+            </div>
+
+            <div class="metric-card">
+                <h3>First Input Delay (FID)</h3>
+                <p>Measures the time from when a user first interacts with your site to when the browser responds.</p>
+                <a href="src/metrics/fid.html" class="button">View Example</a>
+            </div>
+
+            <div class="metric-card">
+                <h3>Cumulative Layout Shift (CLS)</h3>
+                <p>Measures visual stability by quantifying unexpected layout shifts.</p>
+                <a href="src/metrics/cls.html" class="button">View Example</a>
+            </div>
+
+            <div class="metric-card">
+                <h3>Time to Interactive (TTI)</h3>
+                <p>Measures how long it takes for the page to become fully interactive.</p>
+                <a href="src/metrics/tti.html" class="button">View Example</a>
+            </div>
+
+            <div class="metric-card">
+                <h3>Speed Index</h3>
+                <p>Measures how quickly content is visually displayed during page load.</p>
+                <a href="src/metrics/speed-index.html" class="button">View Example</a>
+            </div>
+        </section>
+
+        <section class="github-actions">
+            <h2>GitHub Actions Integration</h2>
+            <p>
+                This repository includes GitHub Actions workflows that run Lighthouse audits on pull requests
+                and block merging to master if the performance score is below 90.
+            </p>
+            <a href="https://github.com/features/actions" class="button" target="_blank">Learn More About GitHub Actions</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script src="src/assets/main.js"></script>
+</body>
+</html> 

@@ -1,0 +1,29 @@
+{
+  "name": "lighthouse-performance-metrics",
+  "version": "1.0.0",
+  "description": "A repository explaining Lighthouse performance metrics with examples",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "lighthouse": "lhci autorun",
+    "test": "lhci autorun"
+  },
+  "keywords": [
+    "lighthouse",
+    "performance",
+    "web-vitals",
+    "metrics",
+    "fcp",
+    "lcp",
+    "cls",
+    "fid",
+    "tti",
+    "tbt"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@lhci/cli": "^0.12.0",
+    "serve": "^14.2.0"
+  }
+} 

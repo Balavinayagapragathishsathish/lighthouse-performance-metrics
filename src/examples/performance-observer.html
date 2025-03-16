@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PerformanceObserver API - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <style>
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .metrics-table th, .metrics-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .metrics-table th {
+            background-color: var(--secondary-color);
+        }
+        
+        .metrics-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .test-area {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .test-button {
+            margin-right: 10px;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+        }
+        
+        .good-value {
+            color: var(--success-color);
+        }
+        
+        .average-value {
+            color: var(--warning-color);
+        }
+        
+        .poor-value {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PerformanceObserver API</h1>
+        <p>Measuring real user performance metrics in the browser</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is the PerformanceObserver API?</h2>
+            <p>
+                The PerformanceObserver API allows you to observe performance measurement events and get notified
+                of new performance entries as they are recorded in the browser's performance timeline.
+            </p>
+            <p>
+                This API is crucial for Real User Monitoring (RUM) as it enables you to collect performance
+                metrics from actual users' browsers and report them to your analytics system.
+            </p>
+        </section>
+
+        <section>
+            <h2>Live Performance Metrics</h2>
+            <p>Below are the performance metrics for this page, measured in real-time:</p>
+            
+            <table class="metrics-table" id="metrics-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>First Contentful Paint (FCP)</td>
+                        <td id="fcp-value">Measuring...</td>
+                        <td id="fcp-status">-</td>
+                    </tr>
+                    <tr>
+                        <td>Largest Contentful Paint (LCP)</td>
+                        <td id="lcp-value">Measuring...</td>
+                        <td id="lcp-status">-</td>
+                    </tr>
+                    <tr>
+                        <td>Cumulative Layout Shift (CLS)</td>
+                        <td id="cls-value">Measuring...</td>
+                        <td id="cls-status">-</td>
+                    </tr>
+                    <tr>
+                        <td>First Input Delay (FID)</td>
+                        <td id="fid-value">Waiting for input...</td>
+                        <td id="fid-status">-</td>
+                    </tr>
+                    <tr>
+                        <td>Time to First Byte (TTFB)</td>
+                        <td id="ttfb-value">Measuring...</td>
+                        <td id="ttfb-status">-</td>
+                    </tr>
+                    <tr>
+                        <td>DOM Content Loaded</td>
+                        <td id="dcl-value">Measuring...</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Load Complete</td>
+                        <td id="load-value">Measuring...</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Test Performance Metrics</h2>
+            <p>
+                Click the buttons below to simulate different performance scenarios and see how the PerformanceObserver
+                captures the metrics:
+            </p>
+            
+            <div class="test-controls">
+                <button id="test-layout-shift" class="button test-button">Simulate Layout Shift</button>
+                <button id="test-long-task" class="button test-button">Simulate Long Task</button>
+                <button id="test-resource-load" class="button test-button">Load Resource</button>
+            </div>
+            
+            <div class="test-area" id="test-area">
+                <p>Test area for performance demonstrations</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>PerformanceObserver Code Examples</h2>
+            
+            <h3>Basic Usage</h3>
+            <pre class="code-block">
+// Create a PerformanceObserver
+const observer = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  for (const entry of entries) {
+    console.log(`${entry.name}: ${entry.startTime}ms`);
+  }
+});
+
+// Start observing paint timing events
+observer.observe({ type: 'paint', buffered: true });
+            </pre>
+            
+            <h3>Observing Multiple Entry Types</h3>
+            <pre class="code-block">
+// Create a PerformanceObserver for multiple entry types
+const observer = new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  for (const entry of entries) {
+    console.log(`Type: ${entry.entryType}, Name: ${entry.name}, Time: ${entry.startTime}ms`);
+  }
+});
+
+// Start observing multiple types of performance entries
+observer.observe({ 
+  entryTypes: ['paint', 'largest-contentful-paint', 'layout-shift', 'longtask'] 
+});
+            </pre>
+            
+            <h3>Measuring Core Web Vitals</h3>
+            <pre class="code-block">
+// Measure LCP
+let lcpValue = 0;
+new PerformanceObserver((entryList) => {
+  const entries = entryList.getEntries();
+  const lastEntry = entries[entries.length - 1];
+  lcpValue = lastEntry.startTime;
+}).observe({ type: 'largest-contentful-paint', buffered: true });
+
+// Measure CLS
+let clsValue = 0;
+new PerformanceObserver((entryList) => {
+  for (const entry of entryList.getEntries()) {
+    if (!entry.hadRecentInput) {
+      clsValue += entry.value;
+    }
+  }
+}).observe({ type: 'layout-shift', buffered: true });
+
+// Measure FID
+let fidValue = 0;
+new PerformanceObserver((entryList) => {
+  for (const entry of entryList.getEntries()) {
+    if (fidValue === 0) {  // Only measure the first input delay
+      fidValue = entry.processingStart - entry.startTime;
+    }
+  }
+}).observe({ type: 'first-input', buffered: true });
+
+// Report the metrics when the page is being unloaded
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // Send the metrics to your analytics
+    navigator.sendBeacon('/analytics', JSON.stringify({
+      lcp: lcpValue,
+      cls: clsValue,
+      fid: fidValue
+    }));
+  }
+});
+            </pre>
+        </section>
+
+        <section>
+            <h2>Available Performance Entry Types</h2>
+            <p>The PerformanceObserver API can observe various types of performance entries:</p>
+            <ul>
+                <li><strong>paint</strong> - First Paint and First Contentful Paint</li>
+                <li><strong>largest-contentful-paint</strong> - Largest Contentful Paint</li>
+                <li><strong>layout-shift</strong> - Layout shifts for CLS</li>
+                <li><strong>first-input</strong> - First Input Delay</li>
+                <li><strong>longtask</strong> - Tasks that take more than 50ms</li>
+                <li><strong>navigation</strong> - Navigation timing metrics</li>
+                <li><strong>resource</strong> - Resource loading performance</li>
+                <li><strong>mark</strong> - User-defined performance marks</li>
+                <li><strong>measure</strong> - User-defined performance measures</li>
+            </ul>
+            <p>
+                Note that browser support varies for different entry types. Always check for feature support
+                before using these APIs in production.
+            </p>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Helper function to update metric display
+        function updateMetricDisplay(id, value, unit, thresholds) {
+            const valueElement = document.getElementById(`${id}-value`);
+            const statusElement = document.getElementById(`${id}-status`);
+            
+            if (valueElement) {
+                valueElement.textContent = `${value}${unit}`;
+                
+                if (thresholds && statusElement) {
+                    let status = '';
+                    let className = '';
+                    
+                    if (value <= thresholds.good) {
+                        status = 'Good';
+                        className = 'good-value';
+                    } else if (value <= thresholds.average) {
+                        status = 'Needs Improvement';
+                        className = 'average-value';
+                    } else {
+                        status = 'Poor';
+                        className = 'poor-value';
+                    }
+                    
+                    statusElement.textContent = status;
+                    valueElement.className = `metric-value ${className}`;
+                }
+            }
+        }
+        
+        // Measure FCP
+        if ('PerformanceObserver' in window) {
+            // FCP Observer
+            const fcpObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (entry.name === 'first-contentful-paint') {
+                        const fcpTime = Math.round(entry.startTime);
+                        updateMetricDisplay('fcp', fcpTime, 'ms', {
+                            good: 1800,
+                            average: 3000
+                        });
+                    }
+                }
+            });
+            fcpObserver.observe({ type: 'paint', buffered: true });
+            
+            // LCP Observer
+            const lcpObserver = new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                const lastEntry = entries[entries.length - 1];
+                const lcpTime = Math.round(lastEntry.startTime);
+                
+                updateMetricDisplay('lcp', lcpTime, 'ms', {
+                    good: 2500,
+                    average: 4000
+                });
+            });
+            lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+            
+            // CLS Observer
+            let clsValue = 0;
+            const clsObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        clsValue += entry.value;
+                        updateMetricDisplay('cls', clsValue.toFixed(3), '', {
+                            good: 0.1,
+                            average: 0.25
+                        });
+                    }
+                }
+            });
+            clsObserver.observe({ type: 'layout-shift', buffered: true });
+            
+            // FID Observer
+            const fidObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    const fidTime = Math.round(entry.processingStart - entry.startTime);
+                    updateMetricDisplay('fid', fidTime, 'ms', {
+                        good: 100,
+                        average: 300
+                    });
+                }
+            });
+            fidObserver.observe({ type: 'first-input', buffered: true });
+            
+            // Navigation Timing for TTFB
+            const navigationObserver = new PerformanceObserver((entryList) => {
+                const navigationEntry = entryList.getEntries()[0];
+                if (navigationEntry) {
+                    const ttfb = Math.round(navigationEntry.responseStart);
+                    updateMetricDisplay('ttfb', ttfb, 'ms', {
+                        good: 800,
+                        average: 1800
+                    });
+                    
+                    // Also update DCL and Load
+                    const dcl = Math.round(navigationEntry.domContentLoadedEventStart);
+                    const load = Math.round(navigationEntry.loadEventStart);
+                    
+                    updateMetricDisplay('dcl', dcl, 'ms');
+                    updateMetricDisplay('load', load, 'ms');
+                }
+            });
+            navigationObserver.observe({ type: 'navigation', buffered: true });
+            
+            // Long Task Observer
+            const longTaskObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    console.log(`Long task detected: ${entry.duration}ms`);
+                }
+            });
+            try {
+                longTaskObserver.observe({ type: 'longtask', buffered: true });
+            } catch (e) {
+                console.log('Long Task API not supported in this browser');
+            }
+            
+            // Resource Timing Observer
+            const resourceObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    console.log(`Resource loaded: ${entry.name}, Duration: ${entry.duration}ms`);
+                }
+            });
+            resourceObserver.observe({ type: 'resource', buffered: true });
+        } else {
+            // PerformanceObserver not supported
+            document.querySelectorAll('[id$="-value"]').forEach(el => {
+                el.textContent = 'Not supported in this browser';
+            });
+        }
+        
+        // Test buttons functionality
+        document.getElementById('test-layout-shift').addEventListener('click', () => {
+            const testArea = document.getElementById('test-area');
+            testArea.innerHTML = '<p>Original content</p>';
+            
+            // Force a layout shift after a short delay
+            setTimeout(() => {
+                testArea.innerHTML = `
+                    <div style="height: 50px;"></div>
+                    <p>This content shifted down by 50px, causing a layout shift.</p>
+                    <p>The CLS value should have increased.</p>
+                `;
+            }, 500);
+        });
+        
+        document.getElementById('test-long-task').addEventListener('click', () => {
+            const testArea = document.getElementById('test-area');
+            testArea.innerHTML = '<p>Starting a long task...</p>';
+            
+            // Simulate a long task by blocking the main thread
+            const startTime = performance.now();
+            while (performance.now() - startTime < 200) {
+                // Busy wait to block the main thread
+            }
+            
+            testArea.innerHTML = `
+                <p>Long task completed!</p>
+                <p>This task blocked the main thread for over 200ms.</p>
+                <p>Check the console for long task entries.</p>
+            `;
+        });
+        
+        document.getElementById('test-resource-load').addEventListener('click', () => {
+            const testArea = document.getElementById('test-area');
+            testArea.innerHTML = '<p>Loading a resource...</p>';
+            
+            // Create a new image element to load a resource
+            const img = new Image();
+            img.onload = () => {
+                testArea.innerHTML = `
+                    <p>Resource loaded successfully!</p>
+                    <p>Check the console for resource timing entries.</p>
+                `;
+            };
+            img.onerror = () => {
+                testArea.innerHTML = `
+                    <p>Failed to load resource.</p>
+                `;
+            };
+            
+            // Load a small SVG image
+            img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="blue" /%3E%3C/svg%3E';
+            
+            // Add the image to the test area
+            testArea.appendChild(img);
+        });
+        
+        // Create custom performance marks and measures
+        performance.mark('demo-start');
+        
+        // Add a small delay before ending the mark
+        setTimeout(() => {
+            performance.mark('demo-end');
+            performance.measure('demo-measure', 'demo-start', 'demo-end');
+            
+            console.log('Custom performance measure created:');
+            console.log(performance.getEntriesByName('demo-measure')[0]);
+        }, 1000);
+    </script>
+</body>
+</html> 

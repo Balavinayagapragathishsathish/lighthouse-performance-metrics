@@ -1,0 +1,66 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [ master, main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lighthouse-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install -g @lhci/cli@0.12.x serve
+        
+      - name: Build project (if needed)
+        run: |
+          # If your project requires a build step, add it here
+          # For example: npm run build
+          # For this static HTML project, we don't need a build step
+          
+      - name: Start local server
+        run: |
+          serve . -p 8080 &
+          sleep 5 # Give the server time to start
+          
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun --collect.url=http://localhost:8080 --collect.settings.preset=desktop
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          
+      - name: Check Lighthouse score
+        id: lighthouse-check
+        run: |
+          SCORE=$(cat .lighthouseci/lhr-*.json | jq -r '.categories.performance.score')
+          SCORE_PERCENT=$(echo "$SCORE * 100" | bc)
+          echo "Performance score: $SCORE_PERCENT%"
+          
+          if (( $(echo "$SCORE_PERCENT < 90" | bc -l) )); then
+            echo "::error::Lighthouse performance score is below 90%. Current score: $SCORE_PERCENT%"
+            exit 1
+          else
+            echo "Lighthouse performance score is above 90%. Current score: $SCORE_PERCENT%"
+          fi
+          
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-results
+          path: .lighthouseci
+          
+  # This job will only run if the lighthouse-check job passes
+  approve-pr:
+    needs: lighthouse-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve PR
+        run: |
+          echo "Lighthouse performance score is above 90%. PR can be merged." 

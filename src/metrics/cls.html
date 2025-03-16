@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cumulative Layout Shift (CLS) - Lighthouse Metrics</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <style>
+        .layout-container {
+            position: relative;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .content-box {
+            background-color: #f5f5f5;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .ad-placeholder {
+            background-color: #ffeb3b;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .late-image {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .button-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cumulative Layout Shift (CLS)</h1>
+        <p>Understanding and preventing unexpected layout shifts</p>
+    </header>
+
+    <main class="example-container">
+        <section>
+            <h2>What is Cumulative Layout Shift?</h2>
+            <p>
+                Cumulative Layout Shift (CLS) measures the sum total of all individual layout shift scores for every unexpected
+                layout shift that occurs during the entire lifespan of the page. A layout shift occurs any time a visible
+                element changes its position from one rendered frame to the next.
+            </p>
+            
+            <div class="performance-score">
+                <div class="score-circle good-score">Good</div>
+                <p>0 - 0.1</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle average-score">Needs Improvement</div>
+                <p>0.1 - 0.25</p>
+            </div>
+            
+            <div class="performance-score">
+                <div class="score-circle poor-score">Poor</div>
+                <p>Above 0.25</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>CLS Demo</h2>
+            <p>Click the buttons below to see examples of good and bad CLS practices:</p>
+            
+            <div class="button-container">
+                <button id="demo-good" class="button">Good CLS Example</button>
+                <button id="demo-bad" class="button">Poor CLS Example</button>
+            </div>
+            
+            <div class="layout-container" id="cls-demo-area">
+                <p>The demo will appear here...</p>
+            </div>
+            
+            <div id="cls-value-display">
+                <p>Current CLS value: <span id="current-cls">0</span></p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Measuring CLS with PerformanceObserver</h2>
+            <p>You can use the PerformanceObserver API to measure CLS in real user environments:</p>
+            
+            <pre class="code-block">
+// Create a variable to store the CLS value
+let clsValue = 0;
+
+// Create a PerformanceObserver instance
+const clsObserver = new PerformanceObserver((entryList) => {
+  for (const entry of entryList.getEntries()) {
+    // Only count layout shifts without recent user input
+    if (!entry.hadRecentInput) {
+      clsValue += entry.value;
+      console.log(`Current CLS: ${clsValue}`);
+    }
+  }
+});
+
+// Register the observer for layout-shift entries
+clsObserver.observe({ type: 'layout-shift', buffered: true });
+
+// Report the CLS value when the page is being unloaded
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // Send the CLS value to your analytics
+    navigator.sendBeacon('/analytics', JSON.stringify({ cls: clsValue }));
+  }
+});
+            </pre>
+        </section>
+
+        <section>
+            <h2>Common Causes of Layout Shifts</h2>
+            <ul>
+                <li><strong>Images without dimensions</strong> - Images that don't have width and height attributes</li>
+                <li><strong>Ads, embeds, and iframes without dimensions</strong> - Third-party content that resizes dynamically</li>
+                <li><strong>Dynamically injected content</strong> - Content added to the page after the initial load</li>
+                <li><strong>Web fonts causing FOIT/FOUT</strong> - Font loading that causes text to reflow</li>
+                <li><strong>Actions waiting for network response</strong> - UI updates that depend on asynchronous data fetching</li>
+                <li><strong>Animations that trigger layout changes</strong> - Animations that affect the position of other elements</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>How to Improve CLS</h2>
+            <ul>
+                <li><strong>Always include size attributes on images and video elements</strong> - Use width and height attributes</li>
+                <li><strong>Reserve space for ads</strong> - Use a placeholder with the same dimensions</li>
+                <li><strong>Avoid inserting new content above existing content</strong> - Add new content at the bottom</li>
+                <li><strong>Use transform animations instead of properties that trigger layout</strong> - Prefer transform and opacity</li>
+                <li><strong>Preload fonts</strong> - Use font-display: optional or font-display: swap</li>
+                <li><strong>Use CSS aspect ratio boxes</strong> - Create placeholder boxes with the correct aspect ratio</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Code Examples</h2>
+            
+            <h3>Good Practice: Specifying Image Dimensions</h3>
+            <pre class="code-block">
+&lt;!-- Include width and height attributes --&gt;
+&lt;img src="image.jpg" width="640" height="360" alt="Description"&gt;
+
+&lt;!-- Or use CSS to maintain aspect ratio --&gt;
+&lt;style&gt;
+  .image-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  }
+  
+  .image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+&lt;/style&gt;
+
+&lt;div class="image-container"&gt;
+  &lt;img src="image.jpg" alt="Description"&gt;
+&lt;/div&gt;
+            </pre>
+            
+            <h3>Bad Practice: Missing Image Dimensions</h3>
+            <pre class="code-block">
+&lt;!-- No width and height attributes --&gt;
+&lt;img src="image.jpg" alt="Description"&gt;
+            </pre>
+            
+            <h3>Good Practice: Reserving Space for Ads</h3>
+            <pre class="code-block">
+&lt;style&gt;
+  .ad-slot {
+    display: block;
+    width: 100%;
+    height: 250px;
+    background-color: #f1f1f1;
+    margin: 20px 0;
+  }
+&lt;/style&gt;
+
+&lt;div class="ad-slot" id="ad-container"&gt;
+  &lt;p&gt;Advertisement&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  // Load ad after content is ready
+  window.addEventListener('load', () => {
+    loadAd('ad-container');
+  });
+&lt;/script&gt;
+            </pre>
+        </section>
+
+        <a href="../../index.html" class="back-link">← Back to Home</a>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Lighthouse Performance Metrics Explained</p>
+    </footer>
+
+    <script>
+        // Measure CLS for this page
+        let pageCls = 0;
+        
+        if ('PerformanceObserver' in window) {
+            const clsObserver = new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        pageCls += entry.value;
+                        document.getElementById('current-cls').textContent = pageCls.toFixed(3);
+                        
+                        // Add color coding based on performance
+                        const clsElement = document.getElementById('current-cls');
+                        if (pageCls < 0.1) {
+                            clsElement.style.color = 'green';
+                        } else if (pageCls < 0.25) {
+                            clsElement.style.color = 'orange';
+                        } else {
+                            clsElement.style.color = 'red';
+                        }
+                    }
+                }
+            });
+            
+            clsObserver.observe({ type: 'layout-shift', buffered: true });
+        } else {
+            document.getElementById('current-cls').textContent = 'Not supported in this browser';
+        }
+
+        // Demo functionality
+        document.getElementById('demo-good').addEventListener('click', () => {
+            const demoArea = document.getElementById('cls-demo-area');
+            
+            // Good example - reserve space for all elements
+            demoArea.innerHTML = `
+                <div class="content-box">
+                    <h3>Article Title</h3>
+                    <p>This is the beginning of an article with proper space reservation for all elements.</p>
+                </div>
+                
+                <div style="width: 100%; height: 200px; background-color: #e9e9e9; display: flex; align-items: center; justify-content: center;">
+                    <p>Image placeholder (200px height)</p>
+                </div>
+                
+                <div class="content-box">
+                    <p>The image above has a reserved space with the correct dimensions before it loads.</p>
+                </div>
+                
+                <div class="ad-placeholder" style="height: 100px;">
+                    <p>Advertisement Space (100px height)</p>
+                </div>
+                
+                <div class="content-box">
+                    <p>The advertisement space above has a reserved height, preventing layout shifts when the ad loads.</p>
+                </div>
+            `;
+            
+            // Load the image after a delay, but with reserved space
+            setTimeout(() => {
+                const imgPlaceholder = demoArea.querySelector('div[style*="background-color: #e9e9e9"]');
+                if (imgPlaceholder) {
+                    imgPlaceholder.innerHTML = `
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'%3E%3Crect width='600' height='200' fill='%234CAF50'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EImage with Reserved Space%3C/text%3E%3C/svg%3E" 
+                            alt="Example image" style="width: 100%; height: 100%; object-fit: cover;">
+                    `;
+                }
+            }, 1000);
+            
+            // Load the ad after a delay, but with reserved space
+            setTimeout(() => {
+                const adPlaceholder = demoArea.querySelector('.ad-placeholder');
+                if (adPlaceholder) {
+                    adPlaceholder.innerHTML = `
+                        <div style="background-color: #FFC107; padding: 10px; height: 80px;">
+                            <p>Advertisement Content</p>
+                        </div>
+                    `;
+                }
+            }, 2000);
+        });
+        
+        document.getElementById('demo-bad').addEventListener('click', () => {
+            const demoArea = document.getElementById('cls-demo-area');
+            
+            // Bad example - no space reservation
+            demoArea.innerHTML = `
+                <div class="content-box">
+                    <h3>Article Title</h3>
+                    <p>This is the beginning of an article without proper space reservation.</p>
+                </div>
+                
+                <div class="content-box">
+                    <p>The image will load below without reserved space, causing a layout shift.</p>
+                </div>
+                
+                <div class="content-box">
+                    <p>More content that will be pushed down when the image loads.</p>
+                </div>
+            `;
+            
+            // Insert image without reserved space after a delay
+            setTimeout(() => {
+                const firstContentBox = demoArea.querySelector('.content-box:first-child');
+                if (firstContentBox) {
+                    const imgElement = document.createElement('div');
+                    imgElement.innerHTML = `
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'%3E%3Crect width='600' height='200' fill='%23F44336'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'%3EImage Without Reserved Space%3C/text%3E%3C/svg%3E" 
+                            alt="Example image" style="width: 100%;">
+                    `;
+                    demoArea.insertBefore(imgElement, firstContentBox.nextSibling);
+                }
+            }, 1000);
+            
+            // Insert ad without reserved space after a delay
+            setTimeout(() => {
+                const contentBoxes = demoArea.querySelectorAll('.content-box');
+                if (contentBoxes.length > 1) {
+                    const adElement = document.createElement('div');
+                    adElement.innerHTML = `
+                        <div style="background-color: #FFC107; padding: 10px; margin: 20px 0;">
+                            <p>Unexpected Advertisement</p>
+                        </div>
+                    `;
+                    demoArea.insertBefore(adElement, contentBoxes[1]);
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
