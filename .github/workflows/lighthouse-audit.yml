@@ -1,0 +1,41 @@
+name: Lighthouse Audit
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  lighthouse-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          
+      - name: Install dependencies
+        run: npm install -g @lhci/cli@0.11.x
+        
+      - name: Build project
+        run: |
+          # If you have a build step, add it here
+          # For example: npm run build
+          
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun --upload.target=temporary-public-storage --collect.staticDistDir=.
+          
+      - name: Check Lighthouse score
+        run: |
+          SCORE=$(lhci autorun --collect.staticDistDir=. --output=json | jq '.summary.performance')
+          if (( $(echo "$SCORE < 90" | bc -l) )); then
+            echo "Performance score is below 90: $SCORE"
+            exit 1
+          else
+            echo "Performance score is acceptable: $SCORE"
+          fi
+        shell: bash 
