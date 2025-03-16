@@ -12,27 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Set up a simple HTTP server to serve the static files
+      # Install and set up a simple HTTP server
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
       
-      - name: Install http-server
-        run: npm install -g http-server
+      - name: Install serve
+        run: npm install -g serve
       
-      - name: Start HTTP server
-        run: |
-          http-server . -p 8080 &
-          sleep 5  # Give the server time to start
-      
-      # Run Lighthouse CI against the local server
-      - name: Run Lighthouse CI
+      # Run Lighthouse CI with explicit server command
+      - name: Lighthouse CI
         uses: treosh/lighthouse-ci-action@v9
         with:
           urls: |
             http://localhost:8080/
-            http://localhost:8080/index.html
+          serverBaseDir: '.'
+          serverCommand: 'serve -p 8080'
           uploadArtifacts: true
           temporaryPublicStorage: true
       
